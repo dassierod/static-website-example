@@ -48,6 +48,44 @@ pipeline {
         }
     }
 
+stage('Package and Publish') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'github-ghcr-credentials',
+                usernameVariable: 'GHCR_USER',
+                passwordVariable: 'GHCR_TOKEN'
+            )
+        ]) {
+            sh '''
+                set -eu
+
+                IMAGE="ghcr.io/dassierod/static-website"
+
+                echo "Tagging Docker image"
+                docker tag static-website:latest "$IMAGE:${GIT_COMMIT}"
+
+                echo "Logging into GitHub Container Registry"
+                export DOCKER_CONFIG="$(mktemp -d)"
+                trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+
+                printf '%s' "$GHCR_TOKEN" |
+                    docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+                echo "Publishing commit image"
+                docker push "$IMAGE:${GIT_COMMIT}"
+
+                echo "Publishing latest image"
+                docker tag "$IMAGE:${GIT_COMMIT}" "$IMAGE:latest"
+                docker push "$IMAGE:latest"
+
+                echo "DOCKER IMAGE PUBLISHED"
+            '''
+        }
+    }
+}
+
+
     post {
         always {
             sh 'docker rm -f static-web-test 2>/dev/null || true'

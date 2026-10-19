@@ -46,9 +46,8 @@ pipeline {
                 '''
             }
         }
-    }
 
-stage('Package and Publish') {
+ stage('Package and Publish') {
     steps {
         withCredentials([
             usernamePassword(
@@ -85,7 +84,7 @@ stage('Package and Publish') {
     }
 }
 
-
+ }
     post {
         always {
             sh 'docker rm -f static-web-test 2>/dev/null || true'
@@ -93,3 +92,4 @@ stage('Package and Publish') {
     }
 }
 
+}

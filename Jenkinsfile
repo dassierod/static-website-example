@@ -159,6 +159,7 @@ stage('Deploy to AWS') {
         }
     }
 }
+    }
     post {
         always {
             sh 'docker rm -f static-web-test 2>/dev/null || true'
@@ -166,3 +167,4 @@ stage('Deploy to AWS') {
     }
 }
 }
+

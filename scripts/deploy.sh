@@ -17,8 +17,24 @@ docker run -d \
   -p 80:80 \
   "$IMAGE"
 
-echo "Vérification HTTP..."
-curl --fail --retry 10 --retry-delay 2 \
-  --retry-connrefused -I http://localhost
+echo "Vérification HTTP avec plusieurs tentatives..."
+
+SUCCESS=0
+
+for i in $(seq 1 15); do
+    if curl -fsS --max-time 3 http://localhost/ -o /dev/null; then
+        SUCCESS=1
+        break
+    fi
+
+    echo "Tentative $i/15 : serveur pas encore prêt"
+    sleep 2
+done
+
+if [ "$SUCCESS" -ne 1 ]; then
+    echo "ERREUR : le serveur ne répond pas"
+    docker logs --tail 30 "$CONTAINER"
+    exit 1
+fi
 
 echo "DEPLOYMENT SUCCESS"

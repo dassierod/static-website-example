@@ -99,6 +99,29 @@ pipeline {
 }
 
  }
+stage('Deploy to AWS') {
+    steps {
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'aws-deploy-ssh',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: 'SSH_USER'
+            )
+        ]) {
+            sh '''
+                set -eu
+
+                ssh -i "$SSH_KEY" \
+                    -o IdentitiesOnly=yes \
+                    -o BatchMode=yes \
+                    -o StrictHostKeyChecking=yes \
+                    -o UserKnownHostsFile=/home/ubuntu/.ssh/known_hosts \
+                    "$SSH_USER@172.31.22.213" \
+                    'bash -s' < scripts/deploy.sh
+            '''
+        }
+    }
+}
     post {
         always {
             sh 'docker rm -f static-web-test 2>/dev/null || true'

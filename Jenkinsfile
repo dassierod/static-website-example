@@ -96,7 +96,45 @@ pipeline {
             '''
         }
     }
-}
+
+ stage('Test Automatic Rollback') {
+    steps {
+        sh '''
+            set -eu
+
+            echo "=== TEST DU ROLLBACK ==="
+            cp scripts/deploy.sh /tmp/deploy-rollback-test.sh
+
+            sed -i 's/CONTAINER="static-website-prod"/CONTAINER="static-website-rollback-test"/' /tmp/deploy-rollback-test.sh
+
+            sed -i 's/-p 80:80/-p 8085:80/g' /tmp/deploy-rollback-test.sh
+
+            sed -i 's|http://localhost/|http://localhost:8085/|g' /tmp/deploy-rollback-test.sh
+
+            bash -n /tmp/deploy-rollback-test.sh
+
+            docker rm -f static-website-rollback-test 2>/dev/null || true
+
+            docker run -d --name static-website-rollback-test -p 8085:80 static-website:latest
+
+            echo "Simulation d'un échec..."
+
+            if SIMULATE_DEPLOY_FAILURE=true bash /tmp/deploy-rollback-test.sh; then
+                echo "ERREUR : le déploiement aurait dû échouer."
+                exit 1
+            fi
+
+            echo "Vérification du conteneur restauré..."
+
+            docker inspect -f '{{.State.Running}}' static-website-rollback-test | grep -qx true
+
+            curl --fail --retry 10 --retry-delay 2 --retry-connrefused --max-time 3 \
+            http://localhost:8085/ -o /dev/null
+
+            echo "TEST ROLLBACK SUCCESS"
+        '''
+    }
+ }
 
 stage('Deploy to AWS') {
     steps {

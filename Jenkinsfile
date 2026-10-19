@@ -33,19 +33,33 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh '''
-                    set -eu
-                    docker rm -f static-web-test 2>/dev/null || true
-                    docker run -d --name static-web-test static-website:latest
+        
+ stage('Test') {
+    steps {
+        sh '''
+            set -eu
 
-                    docker exec static-web-test wget -q --spider http://localhost/
+            docker rm -f static-web-test 2>/dev/null || true
 
+            docker run -d --name static-web-test static-website:latest
+
+            echo "Waiting for Nginx..."
+
+            for i in $(seq 1 15); do
+                if docker exec static-web-test wget -q --spider http://localhost/; then
                     echo "HTTP TEST PASSED"
-                '''
-            }
-        }
+                    exit 0
+                fi
+                sleep 2
+            done
+
+            echo "HTTP TEST FAILED"
+            docker logs static-web-test
+            exit 1
+        '''
+    }
+ }
+
 
  stage('Package and Publish') {
     steps {

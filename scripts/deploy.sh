@@ -89,10 +89,17 @@ docker run -d \
     -p 80:80 \
     "$IMAGE"
 
-# Vérification
+# Vérification HTTP et simulation d'échec
 echo "Vérification HTTP..."
+
+if [ "${SIMULATE_DEPLOY_FAILURE:-false}" = "true" ]; then
+    echo "TEST : simulation d'un échec de déploiement"
+    false
+fi
+
 check_http
 
+# Désactiver le rollback après un déploiement réussi
 trap - ERR
 
 echo "DEPLOYMENT SUCCESS"

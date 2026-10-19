@@ -144,7 +144,9 @@ pipeline {
                     docker run -d \
                         --name static-website-rollback-test \
                         -p 8085:80 \
-                        static-websitecho "Attente du démarrage de Nginx..."
+                    static-website:latest
+
+                    echo "Attente du démarrage de Nginx..."
 
                       READY=false
 

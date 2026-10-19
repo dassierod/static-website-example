@@ -144,16 +144,24 @@ pipeline {
                     docker run -d \
                         --name static-website-rollback-test \
                         -p 8085:80 \
-                        static-website:latest
+                        static-websitecho "Attente du démarrage de Nginx..."
 
-                    echo "Attente du conteneur de test..."
+                      READY=false
 
-                    curl --fail \
-                        --retry 10 \
-                        --retry-delay 2 \
-                        --retry-connrefused \
-                        --max-time 3 \
-                        http://localhost:8085/ \
+                     for i in $(seq 1 15); do
+                       if curl -fsS --max-time 3 \
+                      http://localhost:8085/ -o /dev/null; then
+                      READY=true
+                      break
+                      fi
+
+                      sleep 2
+                      done
+
+                       if [ "$READY" != "true" ]; then
+                       docker logs static-website-rollback-test
+                       exit 1
+                      fi
                         -o /dev/null
 
                     echo "Simulation d'un échec..."

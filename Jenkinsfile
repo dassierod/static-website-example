@@ -98,7 +98,6 @@ pipeline {
     }
 }
 
- }
 stage('Deploy to AWS') {
     steps {
         withCredentials([
@@ -122,6 +121,7 @@ stage('Deploy to AWS') {
         }
     }
 }
+    }
     post {
         always {
             sh 'docker rm -f static-web-test 2>/dev/null || true'

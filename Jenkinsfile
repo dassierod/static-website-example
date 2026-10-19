@@ -1,4 +1,4 @@
-
+@Library('devops-library') _
 pipeline {
     agent { label 'docker-agent' }
 
@@ -29,7 +29,7 @@ pipeline {
 
         stage('Build Docker') {
             steps {
-                sh 'docker build -t static-website:latest .'
+                dockerBuild('static-website:latest')
             }
         }
 

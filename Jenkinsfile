@@ -164,7 +164,6 @@ pipeline {
                        docker logs static-website-rollback-test
                        exit 1
                       fi
-                        -o /dev/null
 
                     echo "Simulation d'un échec..."
 
@@ -187,7 +186,6 @@ pipeline {
                         --retry-connrefused \
                         --max-time 3 \
                         http://localhost:8085/ \
-                        -o /dev/null
 
                     echo "TEST ROLLBACK SUCCESS"
                 '''
